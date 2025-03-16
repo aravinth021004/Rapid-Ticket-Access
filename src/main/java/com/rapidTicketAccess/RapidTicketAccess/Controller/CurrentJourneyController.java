@@ -53,33 +53,33 @@ public class CurrentJourneyController {
     }
 
     // Generate the tickets3
-    @GetMapping("/generate-ticket")
-    public Ticket generateTicket(@RequestBody DistanceRequest request){
-        if(!isJourneyStarted) return null;
-        Long journeyId = request.getJourneyId();
-        Journey journey = journeyService.getJourneyById(journeyId);
-        String source = request.getSource();
-        String destination = request.getDestination();
-
-        //Creating the ticket
-        Ticket ticket = ticketService.generateTicket(request);
-
-        LocalDateTime timestamp = LocalDateTime.now();
-
-        currentJourneyService.setDestinationCount(destination, request.getNumberOfPassengers());
-        currentJourneyService.setCurrentStopCount(request.getNumberOfPassengers());
-        currentJourneyService.setTotalStopCount(request.getNumberOfPassengers());
-
-        //Adding the record
-        PassengerCount record = new PassengerCount(journey, source,
-                                                   currentJourneyService.getCurrentStopCount(),
-                                                   currentJourneyService.getTotalCount(),
-                                                   timestamp);
-
-        passengerCountService.addNewStopCountRecords(record);
-
-
-        return ticket;
-    }
+//    @GetMapping("/generate-ticket")
+//    public Ticket generateTicket(@RequestBody DistanceRequest request){
+//        if(!isJourneyStarted) return null;
+//        Long journeyId = request.getJourneyId();
+//        Journey journey = journeyService.getJourneyById(journeyId);
+//        String source = request.getSource();
+//        String destination = request.getDestination();
+//
+//        //Creating the ticket
+//        Ticket ticket = ticketService.generateTicket(request);
+//
+//        LocalDateTime timestamp = LocalDateTime.now();
+//
+//        currentJourneyService.setDestinationCount(destination, request.getNumberOfPassengers());
+//        currentJourneyService.setCurrentStopCount(request.getNumberOfPassengers());
+//        currentJourneyService.setTotalStopCount(request.getNumberOfPassengers());
+//
+//        //Adding the record
+//        PassengerCount record = new PassengerCount(journey, source,
+//                                                   currentJourneyService.getCurrentStopCount(),
+//                                                   currentJourneyService.getTotalCount(),
+//                                                   timestamp);
+//
+//        passengerCountService.addNewStopCountRecords(record);
+//
+//
+//        return ticket;
+//    }
 
 }

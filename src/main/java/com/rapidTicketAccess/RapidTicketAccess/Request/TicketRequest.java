@@ -1,4 +1,4 @@
-package com.rapidTicketAccess.RapidTicketAccess.Model;
+package com.rapidTicketAccess.RapidTicketAccess.Request;
 
 import lombok.*;
 

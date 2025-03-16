@@ -17,15 +17,15 @@ public class Ticket {
     private long id;
     private String source; // passenger's Source
     private String destination; // Passenger's Destination
-    private int fare; // Ticket price
-    private String paymentStatus;
+    private int numberOfPassengers; // Number of Passengers
+    private double fare; // Ticket price
     private LocalDateTime timestamp;
 
-    public Ticket(String source, String destination, int fare, String paymentStatus, LocalDateTime timestamp){
+    public Ticket(String source, String destination, int NumberOfPassengers, double fare, LocalDateTime timestamp){
         this.source = source;
         this.destination = destination;
+        this.numberOfPassengers = NumberOfPassengers;
         this.fare = fare;
-        this.paymentStatus = paymentStatus;
         this.timestamp = timestamp;
     }
 }
