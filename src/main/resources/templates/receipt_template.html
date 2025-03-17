@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bus Ticket Receipt</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f8f9fa;
+        }
+        .ticket-container {
+            width: 320px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            background-color: white;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border-radius: 8px;
+        }
+        .ticket-header {
+            font-size: 18px;
+            font-weight: bold;
+            color: blue;
+        }
+        .ticket-details {
+            margin-top: 10px;
+            text-align: left;
+        }
+        .qr-code {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .footer {
+            font-size: 12px;
+            color: gray;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="ticket-container">
+    <div class="ticket-header">🚍 Rapid Ticket Access</div>
+    <hr />
+    <div class="ticket-details">
+        <p><b>Ticket ID:</b> <span id="ticket_id">{{TICKET_ID}}</span></p>
+        <p><b>Source:</b> <span id="source">{{SOURCE}}</span></p>
+        <p><b>Destination:</b> <span id="destination">{{DESTINATION}}</span></p>
+        <p><b>Passengers:</b> <span id="passengers">{{PASSENGERS}}</span></p>
+        <p><b>Price:</b> <span id="price">{{PRICE}}</span></p>
+        <p><b>Date & Time:</b> <span id="datetime">{{DATETIME}}</span></p>
+    </div>
+    <hr />
+    <div class="qr-code">
+        <div id="qrcode"></div>
+    </div>
+    <hr />
+    <div class="footer">Thank you for using Rapid Ticket Access!</div>
+</div>
+
+</body>
+</html>

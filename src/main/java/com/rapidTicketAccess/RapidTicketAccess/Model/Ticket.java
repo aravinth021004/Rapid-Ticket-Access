@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class Ticket {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
     private String source; // passenger's Source
     private String destination; // Passenger's Destination
     private int numberOfPassengers; // Number of Passengers

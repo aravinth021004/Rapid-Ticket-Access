@@ -2,24 +2,31 @@ package com.rapidTicketAccess.RapidTicketAccess.Service;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.WriterException;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
-import com.itextpdf.text.*;
-import com.itextpdf.text.pdf.PdfWriter;
-import com.itextpdf.tool.xml.XMLWorkerHelper;
+import com.google.zxing.qrcode.QRCodeWriter;
+import com.itextpdf.html2pdf.HtmlConverter;
+import com.itextpdf.layout.Document;
 import com.rapidTicketAccess.RapidTicketAccess.DistanceCalculation.HaversineDistanceCalculator;
 import com.rapidTicketAccess.RapidTicketAccess.Request.DistanceRequest;
 import com.rapidTicketAccess.RapidTicketAccess.Model.Stop;
 import com.rapidTicketAccess.RapidTicketAccess.Model.Ticket;
 import com.rapidTicketAccess.RapidTicketAccess.Repository.TicketRepository;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class TicketService {
@@ -51,7 +58,6 @@ public class TicketService {
         oldTicket.setDestination(newTicket.getDestination());
         oldTicket.setFare(newTicket.getFare());
         oldTicket.setTimestamp(newTicket.getTimestamp());
-        oldTicket.setPaymentStatus(newTicket.getPaymentStatus());
 
         return oldTicket;
     }
@@ -95,87 +101,100 @@ public class TicketService {
 //        return ticket;
 //    }
 
-//========================================================================================
+
+
+
+
+//========================================  Generate PDF receipt   ================================================
+
+
+
+
+    private static final String RECEIPT_DIRECTORY = "receipts/";
+    private static final String TEMPLATE_PATH = "templates/receipt_template.html";
 
     public String generatePdfReceipt(String source, String destination, int numberOfPassengers) {
         try {
+            // Read the HTML template
+            String htmlContent = loadHtmlTemplate();
 
-            String distanceUsingOpenStreetMap = calculateDistanceUsingOpenStreetMap(source, destination);
 
-            double amount = 0;
-
-            if(!distanceUsingOpenStreetMap.equalsIgnoreCase("Invalid source or destination")){
-                String[] arr = distanceUsingOpenStreetMap.split(" ");
-                amount = Double.parseDouble(arr[arr.length - 1]);
+            String str = calculateDistanceUsingOpenStreetMap(source, destination);
+            double distance = 0;
+            if(!str.equalsIgnoreCase("Invalid source or destination")){
+                String[] arr = str.split(" ");
+                distance = Double.parseDouble(arr[arr.length - 1]);
             }
-            amount = amount * numberOfPassengers;
-            Ticket ticket = new Ticket(source, destination, numberOfPassengers, amount, LocalDateTime.now());
+            double amount = distance * numberOfPassengers;
 
-            // Add ticket details in the database
-            createTicket(ticket);
+            Ticket ticket = new Ticket();
+            ticket.setSource(source);
+            ticket.setDestination(destination);
+            ticket.setNumberOfPassengers(numberOfPassengers);
+            ticket.setFare(amount);
+            ticket.setTimestamp(LocalDateTime.now());
 
-            long ticketId = ticket.getId();
+            // Ensure the ticket gets an ID (if using database)
+            ticket = createTicket(ticket);
 
-            // Read HTML template
-            String htmlContent = readHtmlTemplate(htmlFilePath, Long.toString(ticketId), source, destination, numberOfPassengers, amount, ticket.getTimestamp().toString());
+            String ticketId = (ticket.getId() != null) ? ticket.getId().toString() : "N/A";
 
-            // Create PDF Document
-            Document document = new Document(PageSize.A6);
-            document.open();
+
+
+            // Replace placeholders  ticket details
+            htmlContent = htmlContent
+                    .replace("{{TICKET_ID}}", ticketId)
+                    .replace("{{SOURCE}}", source)
+                    .replace("{{DESTINATION}}", destination)
+                    .replace("{{PASSENGERS}}", String.valueOf(numberOfPassengers))
+                    .replace("{{PRICE}}", "Rs." + amount)
+                    .replace("{{DATETIME}}", ticket.getTimestamp().toString());
+
+
+            // Ensure the directory exists
+            File directory = new File(RECEIPT_DIRECTORY);
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
+            // Generate unique file name
+            String filePath = RECEIPT_DIRECTORY + "receipt_" + System.currentTimeMillis() + ".pdf";
 
             // Convert HTML to PDF
-            InputStream htmlStream = new ByteArrayInputStream(htmlContent.getBytes());
-            XMLWorkerHelper.getInstance().parseXHtml(writer, document, htmlStream);
-
-            // Generate QR Code and add it to the PDF
-            String qrPath = "qrcode.png";
-            String qrData = "Ticket ID: " + ticketId + "\nSource: " + source + "\nDestination: " + destination +
-                    "\nPassengers: " + numberOfPassengers + "\nPrice: ₹" + amount + "\nDate & Time: " + ticket.getTimestamp().toString();
-            generateQRCode(qrData, qrPath, 150, 150);
-
-            Image qrImage = Image.getInstance(qrPath);
-            qrImage.scaleToFit(120, 120);
-            qrImage.setAlignment(Element.ALIGN_CENTER);
-            document.add(qrImage);
-
-            document.close();
-
-            System.out.println("Receipt PDF generated from HTML successfully");
+            convertHtmlToPdf(htmlContent, filePath);
+            return filePath;
 
         } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
     }
 
-    // Read HTML file and replace placeholders with actual ticket details
-    private String readHtmlTemplate(String htmlFilePath, String ticketId, String source, String destination,
-                                    int numberOfPassengers, double price, String dateTime) throws IOException {
-        StringBuffer content = new StringBuffer();
-        BufferedReader bufferedReader = new BufferedReader(new FileReader(htmlFilePath));
-        String line;
-        while((line = bufferedReader.readLine()) != null) {
-            content.append(line).append("\n");
+    private String loadHtmlTemplate() throws IOException {
+        try (InputStream inputStream = new ClassPathResource(TEMPLATE_PATH).getInputStream();
+             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+            return bufferedReader.lines().collect(Collectors.joining("\n"));
         }
-        bufferedReader.close();
-
-        // Replace placeholders with actual values
-
-        return content.toString()
-                .replace("{{TICKET_ID}}", ticketId)
-                .replace("{{SOURCE}}", source)
-                .replace("{{DESTINATION}}", destination)
-                .replace("{{PASSENGERS}}", String.valueOf(numberOfPassengers))
-                .replace("{{PRICE}}", "₹" + price)
-                .replace("{{DATETIME}}", dateTime);
     }
 
-    //Generate QR Code
-    private void generateQRCode(String data, String filePath, int width, int height) throws Exception {
-        BitMatrix matrix = new MultiFormatWriter().encode(data, BarcodeFormat.QR_CODE, width, height);
-        Path path = FileSystems.getDefault().getPath(filePath);
-        MatrixToImageWriter.writeToPath(matrix, "PNG", path);
+    private void convertHtmlToPdf(String htmlContent, String filePath) throws Exception {
+        try (OutputStream outputStream = new FileOutputStream(filePath)) {
+            HtmlConverter.convertToPdf(htmlContent, outputStream);
+        }
     }
 
+
+    // Generate the url for payment
+    public String generatePaymentUrl(String source, String destination, int numberOfPassengers, double amount) {
+        // Simulating payment gateway integration (Replace with actual payment logic)
+        String paymentGatewayUrl = "https://payment.example.com/pay"; // Replace with actual provider
+
+        // Create a unique payment link (in a real case, you'd generate an order ID & signature)
+        String paymentUrl = paymentGatewayUrl + "?source=" + source + "&destination=" + destination +
+                "&passengers=" + numberOfPassengers + "&amount=" + amount;
+
+        return paymentUrl;
+    }
 
 
 

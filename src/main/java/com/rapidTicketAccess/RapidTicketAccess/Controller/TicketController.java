@@ -2,8 +2,11 @@ package com.rapidTicketAccess.RapidTicketAccess.Controller;
 
 import com.rapidTicketAccess.RapidTicketAccess.Request.TicketRequest;
 import com.rapidTicketAccess.RapidTicketAccess.Service.*;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
@@ -25,23 +28,38 @@ public class TicketController {
 
     //============== Ticket generation =================
 
-    @PostMapping("/generate")
-    public String generateTicket(@RequestBody TicketRequest ticketRequest) {
+    @PostMapping("/generate/{process}")
+    public ResponseEntity<String> generateTicket(@RequestBody TicketRequest ticketRequest, @PathVariable String process) {
         String source = ticketRequest.getSource();
         String destination = ticketRequest.getDestination();
         int numberOfpassengers = Integer.parseInt(ticketRequest.getNumberOfPassengers());
 
-        String transactionId = UUID.randomUUID().toString();
+        String transactionId = LocalDateTime.now().toString();
 
-        paymentService.createTransaction(transactionId, source, destination, numberOfpassengers);
+//        paymentService.createTransaction(transactionId, source, destination, numberOfpassengers);
 
-        // Payment link
+        String receiptPath = "";
         String paymentUrl = "";
 
-        // Generate QR Code (Using API)
-        String qrCodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + paymentUrl;
+        // Payment link and logic
+        if(process.equalsIgnoreCase("ProcessToPayment")) {
+            paymentUrl = "Payment through payment gateway integration";
+        }
 
-        return qrCodeUrl;
+        if(process.equalsIgnoreCase("TestMode")) {
+            paymentUrl = "Payment through test mode";
+            paymentService.markTransactionAsPaid(transactionId);
+
+            receiptPath = ticketService.generatePdfReceipt(source, destination, numberOfpassengers);
+
+
+
+        }
+
+        // Generate QR Code (Using API)
+        String qrCodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + receiptPath;
+
+        return ResponseEntity.ok().body(qrCodeUrl);
     }
 
 
