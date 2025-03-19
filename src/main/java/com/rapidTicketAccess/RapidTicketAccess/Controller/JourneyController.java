@@ -34,6 +34,13 @@ public class JourneyController {
         return journeyService.getJourneyById(id);
     }
 
+    // Modify journey by id
+    @PutMapping("/modify/{id}")
+    public ResponseEntity<String> modifyJourney(@PathVariable Long id, @RequestBody Journey journey) {
+        journeyService.modifyJourney(id, journey);
+        return ResponseEntity.ok("Modified Journey");
+    }
+
     // Delete Ticket by id
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteTicket(@PathVariable Long id){
