@@ -4,7 +4,6 @@ import com.rapidTicketAccess.RapidTicketAccess.Request.TicketRequest;
 import com.rapidTicketAccess.RapidTicketAccess.Service.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -30,6 +29,7 @@ public class TicketController {
 
     @PostMapping("/generate/{process}")
     public ResponseEntity<String> generateTicket(@RequestBody TicketRequest ticketRequest, @PathVariable String process) {
+        Long journeyId = ticketRequest.getJourneyId();
         String source = ticketRequest.getSource();
         String destination = ticketRequest.getDestination();
         int numberOfpassengers = Integer.parseInt(ticketRequest.getNumberOfPassengers());
@@ -50,7 +50,7 @@ public class TicketController {
             paymentUrl = "Payment through test mode";
             paymentService.markTransactionAsPaid(transactionId);
 
-            receiptPath = ticketService.generatePdfReceipt(source, destination, numberOfpassengers);
+            receiptPath = ticketService.generatePdfReceipt(journeyId, source, destination, numberOfpassengers);
 
 
 

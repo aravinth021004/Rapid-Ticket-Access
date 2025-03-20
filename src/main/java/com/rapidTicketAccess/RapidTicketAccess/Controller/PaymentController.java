@@ -31,11 +31,12 @@ public class PaymentController {
             // Update transaction as successful
             paymentService.markTransactionAsPaid(transactionId);
             paymentStatus = "paid";
-            String receiptPath = ticketService.generatePdfReceipt(
-                    paymentResponse.getSource(),
-                    paymentResponse.getDestination(),
-                    Integer.parseInt(paymentResponse.getNumberOfPassengers())
-            );
+            String receiptPath = "";
+//            String receiptPath = ticketService.generatePdfReceipt(
+//                    paymentResponse.getSource(),
+//                    paymentResponse.getDestination(),
+//                    Integer.parseInt(paymentResponse.getNumberOfPassengers())
+//            );
 
             return ResponseEntity.ok("Payment successful. Receipt generated: " + receiptPath);
         } else {

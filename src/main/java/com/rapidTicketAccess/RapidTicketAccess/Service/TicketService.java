@@ -9,6 +9,7 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import com.itextpdf.html2pdf.HtmlConverter;
 import com.itextpdf.layout.Document;
 import com.rapidTicketAccess.RapidTicketAccess.DistanceCalculation.HaversineDistanceCalculator;
+import com.rapidTicketAccess.RapidTicketAccess.Model.Journey;
 import com.rapidTicketAccess.RapidTicketAccess.Request.DistanceRequest;
 import com.rapidTicketAccess.RapidTicketAccess.Model.Stop;
 import com.rapidTicketAccess.RapidTicketAccess.Model.Ticket;
@@ -73,10 +74,7 @@ public class TicketService {
     }
 
 
-    public Integer calculateDistance(DistanceRequest request){
-        Long journeyId = request.getJourneyId();
-        String source = request.getSource();
-        String destination = request.getDestination();
+    public Integer calculateDistance(Long journeyId, String source, String destination){
         List<Stop> stops = journeyService.getJourneyById(journeyId).getStops();
         int sourceDistance = 0;
         int destinationDistance = 0;
@@ -113,18 +111,27 @@ public class TicketService {
     private static final String RECEIPT_DIRECTORY = "receipts/";
     private static final String TEMPLATE_PATH = "templates/receipt_template.html";
 
-    public String generatePdfReceipt(String source, String destination, int numberOfPassengers) {
+    public String generatePdfReceipt(Long journeyId, String source, String destination, int numberOfPassengers) {
         try {
             // Read the HTML template
             String htmlContent = loadHtmlTemplate();
 
+            Journey journey = journeyService.getJourneyById(journeyId);
 
-            String str = calculateDistanceUsingOpenStreetMap(source, destination);
             double distance = 0;
-            if(!str.equalsIgnoreCase("Invalid source or destination")){
-                String[] arr = str.split(" ");
-                distance = Double.parseDouble(arr[arr.length - 1]);
-            }
+
+            // Using open street map api
+//            String str = calculateDistanceUsingOpenStreetMap(source, destination);
+//            if(!str.equalsIgnoreCase("Invalid source or destination")){
+//                String[] arr = str.split(" ");
+//                distance = Double.parseDouble(arr[arr.length - 1]);
+//            }
+
+            // Manual distance calculation
+            distance = calculateDistance(journeyId, source, destination);
+
+
+
             double amount = distance * numberOfPassengers;
 
             Ticket ticket = new Ticket();
@@ -143,6 +150,8 @@ public class TicketService {
 
             // Replace placeholders  ticket details
             htmlContent = htmlContent
+                    .replace("{{START_PLACE}}", journey.getStartPlace())
+                    .replace("{{END_PLACE}}", journey.getEndPlace())
                     .replace("{{TICKET_ID}}", ticketId)
                     .replace("{{SOURCE}}", source)
                     .replace("{{DESTINATION}}", destination)
