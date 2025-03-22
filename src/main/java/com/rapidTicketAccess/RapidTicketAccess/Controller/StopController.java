@@ -74,5 +74,4 @@ public class StopController {
         return ResponseEntity.ok("Stop removed Successfully");
     }
 
-    //
 }
