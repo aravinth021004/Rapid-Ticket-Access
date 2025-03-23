@@ -48,6 +48,6 @@ public class JourneyController {
         if(journey == null) return ResponseEntity.ofNullable("No Journey found");
 
         journeyService.removeJourney(journey);
-        return ResponseEntity.ok("Journey removed successfully");
+        return ResponseEntity.ok("Journey removed successfully!");
     }
 }
