@@ -1,56 +1,74 @@
 package com.rapidTicketAccess.RapidTicketAccess.Controller;
 
-import com.rapidTicketAccess.RapidTicketAccess.Request.DistanceRequest;
 import com.rapidTicketAccess.RapidTicketAccess.Model.Journey;
-import com.rapidTicketAccess.RapidTicketAccess.Model.PassengerCount;
-import com.rapidTicketAccess.RapidTicketAccess.Model.Ticket;
+import com.rapidTicketAccess.RapidTicketAccess.Request.PassengerCountUpdateRequest;
+import com.rapidTicketAccess.RapidTicketAccess.Response.PassengerCountUpdateResponse;
 import com.rapidTicketAccess.RapidTicketAccess.Service.CurrentJourneyService;
 import com.rapidTicketAccess.RapidTicketAccess.Service.JourneyService;
 import com.rapidTicketAccess.RapidTicketAccess.Service.PassengerCountService;
 import com.rapidTicketAccess.RapidTicketAccess.Service.TicketService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.time.LocalDateTime;
 
+@CrossOrigin(origins = "http://127.0.0.1:5500")
 @RestController
-@RequestMapping("/currentJourney")
+@RequestMapping("/api/currentJourney")
 public class CurrentJourneyController {
-    private boolean isJourneyStarted = false;
-
-    private CurrentJourneyService currentJourneyService;
 
     private final TicketService ticketService;
     private final JourneyService journeyService;
     private final PassengerCountService passengerCountService;
+    private final CurrentJourneyService currentJourneyService;
 
     public CurrentJourneyController(TicketService ticketService,
                                     JourneyService journeyService,
-                                    PassengerCountService passengerCountService){
+                                    PassengerCountService passengerCountService,
+                                    CurrentJourneyService currentJourneyService) {
         this.ticketService = ticketService;
         this.journeyService = journeyService;
         this.passengerCountService = passengerCountService;
+        this.currentJourneyService = currentJourneyService;
     }
 
     // To start the journey
     @PostMapping("/startJourney")
-    public void startJourney(){
-        isJourneyStarted = true;
-        currentJourneyService = new CurrentJourneyService();
+    public ResponseEntity<String> startJourney(@RequestBody Long journeyId){
+        Journey journey = journeyService.getJourneyById(journeyId);
+        currentJourneyService.setJouneyDetails(journey);
         System.out.println("Journey started");
+        return ResponseEntity.ok("Journey started successfully");
     }
 
     // To stop the journey
     @PostMapping("/stopJourney")
-    public void stopJourney(){
-        isJourneyStarted = false;
+    public ResponseEntity<String> stopJourney(@RequestBody String message){
         currentJourneyService.reset();
-        currentJourneyService = null;
-        System.out.println("Journey stopped");
+        System.out.println(message);
+        return ResponseEntity.ok("Journey stopped successfully");
+    }
+
+    @PostMapping("/updatePassengerCount")
+    public ResponseEntity<PassengerCountUpdateResponse> updatePassengerCount(@RequestBody PassengerCountUpdateRequest request) {
+        if(currentJourneyService.isJourneyStarted()){
+            currentJourneyService.setDestinationCount(request.getDestination(), request.getNumberOfPassengers());
+            int newCount = currentJourneyService.getStopCount(request.getDestination());
+            int currentStopCount = currentJourneyService.getCurrentStopCount();
+            int totalCount = currentJourneyService.getTotalCount();
+            PassengerCountUpdateResponse response = new PassengerCountUpdateResponse(newCount, currentStopCount, totalCount);
+            return ResponseEntity.ok(response);
+        }
+        else return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
+
+
     }
 
     @PostMapping("/stop/{currentStop}")
     public void reachCurrentStop(@PathVariable String currentStop){
         currentJourneyService.setCurrentStopCountAfterStop(currentStop);
     }
+
+//    @PostMapping("/stop")
 
     // Generate the tickets3
 //    @GetMapping("/generate-ticket")

@@ -1,15 +1,25 @@
 package com.rapidTicketAccess.RapidTicketAccess.Service;
 
 import com.rapidTicketAccess.RapidTicketAccess.Model.CurrentJourney;
+import com.rapidTicketAccess.RapidTicketAccess.Model.Journey;
+import com.rapidTicketAccess.RapidTicketAccess.Model.Stop;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class CurrentJourneyService {
+    private boolean isJourneyStarted = false;
+    private CurrentJourney currentJourney = new CurrentJourney();
+    private JourneyService journeyService;
 
-    private CurrentJourney currentJourney;
+    public CurrentJourneyService(JourneyService journeyService) {
+        this.journeyService = journeyService;
+    }
 
-    public CurrentJourneyService(){
-        currentJourney = new CurrentJourney();
+
+    public boolean isJourneyStarted() {
+        return isJourneyStarted;
     }
 
     //Set the current stop count
@@ -19,6 +29,12 @@ public class CurrentJourneyService {
         currentJourney.setCurrentStopCount(currentStopCount);
     }
 
+    public void setSourceAndDestination(String source, String destination){
+        currentJourney.setStartPlace(source);
+        currentJourney.setEndPlace(destination);
+    }
+
+    // Set the current stop count
     public void setCurrentStopCount(int numberOfPassengers){
         currentJourney.setCurrentStopCount(currentJourney.getCurrentStopCount() + numberOfPassengers);
     }
@@ -47,8 +63,26 @@ public class CurrentJourneyService {
 
     // Reset all the details
     public void reset(){
-        currentJourney.setTotalCount(0);
+        isJourneyStarted = false;
+        currentJourney = new CurrentJourney();
+    }
+
+    public void setJouneyDetails(Journey journey) {
+        isJourneyStarted = true;
+        currentJourney.setStartPlace(journey.getStartPlace());
+        currentJourney.setEndPlace(journey.getEndPlace());
+
+        List<Stop> stops = journey.getStops();
+
+        for(Stop stop : stops){
+            currentJourney.setDestinationCount(stop.getCurrentStop(), 0);
+        }
+
         currentJourney.setCurrentStopCount(0);
-        currentJourney.resetDestinationCount();
+        currentJourney.setTotalCount(0);
+    }
+
+    public int getStopCount(String destination) {
+        return currentJourney.getDestinationCount(destination);
     }
 }

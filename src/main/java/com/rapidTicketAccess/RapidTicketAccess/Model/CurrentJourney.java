@@ -15,7 +15,7 @@ import java.util.Map;
 @Setter
 @ToString
 public class CurrentJourney {
-    private Long id;
+//    private Long id;
     private String startPlace;
     private String endPlace;
 
@@ -26,6 +26,8 @@ public class CurrentJourney {
 
     public void setDestinationCount(String destination, int numberOfPassengers) {
         stopWiseCount.put(destination, stopWiseCount.getOrDefault(destination, 0) + numberOfPassengers);
+        totalCount += numberOfPassengers;
+        currentStopCount += numberOfPassengers;
     }
 
     public int getDestinationCount(String destination) {
@@ -33,6 +35,8 @@ public class CurrentJourney {
     }
 
     public void resetDestinationCount(){
+        totalCount = 0;
+        currentStopCount = 0;
         stopWiseCount.clear();
     }
 
