@@ -101,11 +101,33 @@
 <!--			<artifactId>itext7-core</artifactId>-->
 <!--			<version>7.2.5</version>-->
 <!--		</dependency>-->
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>html2pdf</artifactId>
+			<version>4.0.4</version>
+		</dependency>
+
+			<!-- Flying Saucer -->
+<!--			<dependency>-->
+<!--				<groupId>org.xhtmlrenderer</groupId>-->
+<!--				<artifactId>flying-saucer-pdf-openpdf</artifactId>-->
+<!--				<version>9.1.22</version>-->
+<!--			</dependency>-->
+
 <!--		<dependency>-->
-<!--			<groupId>com.itextpdf</groupId>-->
-<!--			<artifactId>html2pdf</artifactId>-->
-<!--			<version>4.0.4</version>-->
+<!--			<groupId>com.openhtmltopdf</groupId>-->
+<!--			<artifactId>openhtmltopdf-pdfbox</artifactId>-->
+<!--			<version>1.0.10</version>-->
 <!--		</dependency>-->
+
+
+		<!-- Optional: Logging if needed -->
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-simple</artifactId>
+				<version>1.7.36</version>
+			</dependency>
+
 
 		<dependency>
 			<groupId>org.jsoup</groupId>
