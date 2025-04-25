@@ -137,6 +137,14 @@
 
 	</dependencies>
 
+	<repositories>
+		<repository>
+			<id>itext</id>
+			<url>https://repo.itextsupport.com/releases</url>
+		</repository>
+	</repositories>
+
+
 	<build>
 		<plugins>
 			<plugin>
