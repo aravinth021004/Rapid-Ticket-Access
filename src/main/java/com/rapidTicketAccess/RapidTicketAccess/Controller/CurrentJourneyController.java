@@ -64,8 +64,10 @@ public class CurrentJourneyController {
     }
 
     @PostMapping("/stop/{currentStop}")
-    public void reachCurrentStop(@PathVariable String currentStop){
+    public ResponseEntity<Integer> reachCurrentStop(@PathVariable String currentStop){
+        System.out.println("Current Stop reached: " + currentStop);
         currentJourneyService.setCurrentStopCountAfterStop(currentStop);
+        return ResponseEntity.ok(currentJourneyService.getCurrentStopCount());
     }
 
 //    @PostMapping("/stop")
